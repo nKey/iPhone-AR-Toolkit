@@ -8,13 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 #import "ARViewController.h"
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 
 @class ARCoordinate;
 
-@interface AugmentedRealityController : NSObject <UIAccelerometerDelegate, CLLocationManagerDelegate> {
+@interface AugmentedRealityController : NSObject <CLLocationManagerDelegate> {
 
 	BOOL scaleViewsBasedOnDistance;
 	BOOL rotateViewsBasedOnPerspective;
@@ -25,11 +26,12 @@
 	
 	ARCoordinate		*centerCoordinate;
 	CLLocationManager	*locationManager;
+    CMMotionManager     *motionManager;
 	UIDeviceOrientation currentOrientation;
 	
 	ARViewController	*rootViewController;
-	UIAccelerometer		*accelerometerManager;
 	CLLocation			*centerLocation;
+    CMAttitude          *referenceAttitude;
 	UIView				*displayView;
 	UILabel				*debugView;
     UIButton            *closeButton;
@@ -55,10 +57,11 @@
 @property double maximumRotationAngle;
 @property double degreeRange;
 
-@property (nonatomic, retain) UIAccelerometer	*accelerometerManager;
 @property (nonatomic, retain) CLLocationManager	*locationManager;
+@property (nonatomic, retain) CMMotionManager   *motionManager;
 @property (nonatomic, retain) ARCoordinate		*centerCoordinate;
 @property (nonatomic, retain) CLLocation		*centerLocation;
+@property (nonatomic, copy)   CMAttitude        *referenceAttitude;
 @property (nonatomic, retain) UIView			*displayView;
 @property (nonatomic, retain) UIView			*ARView;
 @property (nonatomic, retain) ARViewController	*rootViewController;

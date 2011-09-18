@@ -28,7 +28,7 @@
 @implementation AugmentedRealityController
 
 @synthesize locationManager;
-@synthesize accelerometerManager;
+@synthesize motionManager;
 @synthesize displayView;
 @synthesize centerCoordinate;
 @synthesize scaleViewsBasedOnDistance;
@@ -37,6 +37,7 @@
 @synthesize minimumScaleFactor;
 @synthesize maximumRotationAngle;
 @synthesize centerLocation;
+@synthesize referenceAttitude;
 @synthesize coordinates = coordinates;
 @synthesize debugMode;
 @synthesize currentOrientation;
@@ -153,7 +154,7 @@
 
 - (void)startListening {
 	
-	// start our heading readings and our accelerometer readings.
+	// start our heading readings.
 	if (![self locationManager]) {
         CLLocationManager *newLocationManager = [[CLLocationManager alloc] init];
 		[self setLocationManager: newLocationManager];
@@ -165,12 +166,38 @@
 		[[self locationManager] startUpdatingLocation];
 		[[self locationManager] setDelegate: self];
 	}
-			
-	if (![self accelerometerManager]) {
-		[self setAccelerometerManager: [UIAccelerometer sharedAccelerometer]];
-		[[self accelerometerManager] setUpdateInterval: 0.75];
-		[[self accelerometerManager] setDelegate: self];
-	}
+    
+    if (!self.motionManager) {
+        motionManager = [[CMMotionManager alloc] init];
+        self.motionManager.deviceMotionUpdateInterval = 1.0/10.0; // 10Hz = 100ms
+        [self.motionManager startDeviceMotionUpdates];
+        CMDeviceMotion *deviceMotion = self.motionManager.deviceMotion;
+        self.referenceAttitude = deviceMotion.attitude; //save the reference frame
+        
+        [self.motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMDeviceMotion *motion, NSError *error) {
+            if (motion) {
+                if (self.referenceAttitude) {
+                    [motion.attitude multiplyByInverseOfAttitude:self.referenceAttitude];
+                } else {
+                    self.referenceAttitude = motion.attitude;
+                }
+                
+                switch (currentOrientation) {
+                    case UIDeviceOrientationLandscapeLeft:
+                    case UIDeviceOrientationLandscapeRight:
+                        viewAngle = motion.attitude.pitch;
+                        break;
+                    case UIDeviceOrientationPortrait:
+                    case UIDeviceOrientationPortraitUpsideDown:
+                        viewAngle = motion.attitude.roll;
+                        break;
+                    default:
+                        break;
+                }
+                [self updateCenterCoordinate];
+            }
+        }];
+    }
 	
 	if (![self centerCoordinate]) 
 		[self setCenterCoordinate:[ARCoordinate coordinateWithRadialDistance:1.0 inclination:0 azimuth:0]];
@@ -179,13 +206,10 @@
 - (void)stopListening {
     [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.motionManager stopDeviceMotionUpdates];
    
     if ([self locationManager]) {
        [[self locationManager] setDelegate: nil];
-    }
-    
-    if ([self accelerometerManager]) {
-       [[self accelerometerManager] setDelegate: nil];
     }
 }
 
@@ -199,8 +223,7 @@
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation {
-
-		[self setCenterLocation:newLocation];
+    [self setCenterLocation:newLocation];
 }
 
 -(void) setupDebugPostion {
@@ -227,28 +250,6 @@
 	[[self centerCoordinate] setAzimuth: latestHeading - adjustment];
 
 	[self updateLocations];
-}
-
-- (void)accelerometer:(UIAccelerometer *)accelerometer didAccelerate:(UIAcceleration *)acceleration {
-	
-	switch (currentOrientation) {
-		case UIDeviceOrientationLandscapeLeft:
-			viewAngle = atan2(acceleration.x, acceleration.z);
-			break;
-		case UIDeviceOrientationLandscapeRight:
-			viewAngle = atan2(-acceleration.x, acceleration.z);
-			break;
-		case UIDeviceOrientationPortrait:
-			viewAngle = atan2(acceleration.y, acceleration.z);
-			break;
-		case UIDeviceOrientationPortraitUpsideDown:
-			viewAngle = atan2(-acceleration.y, acceleration.z);
-			break;	
-		default:
-			break;
-	}
-	
-	[self updateCenterCoordinate];
 }
 
 - (void)setCenterLocation:(CLLocation *)newLocation {
@@ -495,6 +496,9 @@
 
 - (void)dealloc {
 	[[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+    [motionManager stopDeviceMotionUpdates];
+    [motionManager release];
+    [referenceAttitude release];
     [ARView release];
 	[locationManager release];
 	[coordinateViews release];
