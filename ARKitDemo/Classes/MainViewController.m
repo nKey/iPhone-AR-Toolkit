@@ -43,12 +43,16 @@
     ARKitDemoAppDelegate *appDelegate = (ARKitDemoAppDelegate*)[[UIApplication sharedApplication] delegate];
     
     if([ARKit deviceSupportsAR]){
-        [self setCameraViewController:[[ARViewController alloc] initWithDelegate:self]];
+        ARViewController *newCameraViewController = [[ARViewController alloc] initWithDelegate:self];
+        self.cameraViewController = newCameraViewController;
+        [newCameraViewController release];
         [cameraViewController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
         [self presentModalViewController:cameraViewController animated:YES]; 
     }
     else {
-        [self setInfoViewController:[[UIViewController alloc] init]];
+        UIViewController *newInfoViewController = [[UIViewController alloc] init];
+        [self setInfoViewController:newInfoViewController];
+        [newInfoViewController release];
         UILabel *errorLabel = [[UILabel alloc] init];
         [errorLabel setNumberOfLines:0];
         [errorLabel setText: @"Augmented Reality is not supported on this device"];
@@ -89,7 +93,9 @@
         
         ARKitDemoAppDelegate *appDelegate = (ARKitDemoAppDelegate*)[[UIApplication sharedApplication] delegate];
         
-        [self setInfoViewController:[[UIViewController alloc] init]];
+        UIViewController *newInfoViewController = [[UIViewController alloc] init];
+        [self setInfoViewController:newInfoViewController];
+        [newInfoViewController release];
         UILabel *errorLabel = [[UILabel alloc] init];
         [errorLabel setNumberOfLines:0];
         [errorLabel setText: [NSString stringWithFormat:@"You clicked on %@ and distance is %f",[coordinate title], [coordinate distanceFromOrigin]]];

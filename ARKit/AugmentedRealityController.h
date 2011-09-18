@@ -48,7 +48,7 @@
 
 @property BOOL scaleViewsBasedOnDistance;
 @property BOOL rotateViewsBasedOnPerspective;
-@property BOOL debugMode;
+@property (nonatomic) BOOL debugMode;
 
 @property double maximumScaleDistance;
 @property double minimumScaleFactor;

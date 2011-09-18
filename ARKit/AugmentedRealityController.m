@@ -74,7 +74,7 @@
 	[self setCurrentOrientation:UIDeviceOrientationPortrait];
 	[self setDegreeRange:[ARView bounds].size.width / 12];
     
-    [self setDisplayView: [[UIView alloc] initWithFrame: screenRect]];
+    displayView = [[UIView alloc] initWithFrame: screenRect];
 	[self setCurrentOrientation:UIDeviceOrientationPortrait];
 	[self setDegreeRange:[[self displayView] bounds].size.width / 12];
 
@@ -155,7 +155,9 @@
 	
 	// start our heading readings and our accelerometer readings.
 	if (![self locationManager]) {
-		[self setLocationManager: [[CLLocationManager alloc] init]];
+        CLLocationManager *newLocationManager = [[CLLocationManager alloc] init];
+		[self setLocationManager: newLocationManager];
+        [newLocationManager release];
 		[[self locationManager] setHeadingFilter: 1.0];
         [[self locationManager] setDistanceFilter:2.0];
 		[[self locationManager] setDesiredAccuracy: kCLLocationAccuracyNearestTenMeters];
@@ -369,14 +371,14 @@
 			if ([self rotateViewsBasedOnPerspective]) {
 				transform.m34 = 1.0 / 300.0;
 				
-				double itemAzimuth		= [item azimuth];
-				double centerAzimuth	= [[self centerCoordinate] azimuth];
-				
-				if (itemAzimuth - centerAzimuth > M_PI) 
-					centerAzimuth += 2 * M_PI;
-				
-				if (itemAzimuth - centerAzimuth < -M_PI) 
-					itemAzimuth  += 2 * M_PI;
+//				double itemAzimuth		= [item azimuth];
+//				double centerAzimuth	= [[self centerCoordinate] azimuth];
+//				
+//				if (itemAzimuth - centerAzimuth > M_PI) 
+//					centerAzimuth += 2 * M_PI;
+//				
+//				if (itemAzimuth - centerAzimuth < -M_PI) 
+//					itemAzimuth  += 2 * M_PI;
 				
 		//		double angleDifference	= itemAzimuth - centerAzimuth;
 		//		transform				= CATransform3DRotate(transform, [self maximumRotationAngle] * angleDifference / 0.3696f , 0, 1, 0);
